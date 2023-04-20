@@ -1,9 +1,18 @@
 from os import getenv
 from playwright.sync_api import sync_playwright
 import time
+import io
+
+list_not_client = []
+
+def abrir_arquivo(nome='cnpjs.txt'):
+    with open(nome) as file:
+        arquivo = file.read().replace(",", ' ').split()
+    return arquivo
 
 
 def autenticar(site):
+    site.goto('https://sistemas.cotefacil.com/CTFLLogan-webapp/login.jsf')
     print("Inserindo as credenciais ...")
     time.sleep(0.5)
     usuario_demo = getenv(key="USUARIO_DEMO")
@@ -16,51 +25,90 @@ def autenticar(site):
     time.sleep(0.2)
 
 
-def entrar_na_tela_cond():
-    manualmente = input('Deseja inserir as informações e ir até a aba Fornecedores, manualmente ? (S) (N): ')
-    site = navegador.new_page()
-    # cliente = input('Insira o cnpj do cliente: ')
-    cliente = '10834344000150'
-    if manualmente == 'S' or manualmente == 's':
-        site.goto('https://sistemas.cotefacil.com/CTFLLogan-webapp/login.jsf')
-        autenticar(site)
-        input('Processo travado, insira as informações até e entra na aba FORNECEDORES, depois clique em Enter...')
+def cliente_nao_encontrado(site):
+    return site.locator('xpath=//*[@id="inputHiddenMessage"]').is_visible()
+
+def verificar_se_ja_processou(cliente):
+    condicao = cliente in abrir_arquivo('nao_tem_fornecedor.txt')
+    condicao2 = cliente in abrir_arquivo('not_client.txt')
+    condicao3 = cliente in abrir_arquivo('condicoes_salvas.txt')
+    if condicao == True or condicao2 == True or condicao3 == True:
+        return True
     else:
-        site.goto('https://sistemas.cotefacil.com/CTFLLogan-webapp/login.jsf')
-        autenticar(site)
-        site.fill('xpath=/html/body/table/tbody/tr[2]/td/table/tbody/tr/td[2]/div/table[1]/tbody/tr[4]/td/form/table'
-                  '/tbody/tr[1]/td/div/div[2]/table/tbody/tr[2]/td[2]/input', cliente)
-        time.sleep(1.5)
-        site.locator('xpath=//*[@id="pesquisarUsuarios:btnPesquisar"]').click()
-        time.sleep(1.5)
+        return False
 
-        editar = site.locator('xpath=/html/body/table/tbody/tr[2]/td/table/tbody/tr/td[2]/div/table[1]/tbody/tr[4]'
-                              '/td/form/table/tbody/tr[3]/td/div/div[2]/table/tbody/tr').count()
+def entrar_na_tela_cond(site):
+    manualmente = 'N'  # input('Deseja inserir as informações e ir até a aba Fornecedores, manualmente ? (S) (N): ')
+    # cliente = input('Insira o cnpj do cliente: ')
+    # cliente = '10834344000150'
+    for cliente in abrir_arquivo():
+        cnpj_cliente_arquivo = cliente
+        validacao_processou = verificar_se_ja_processou(cliente)
+        if not validacao_processou:
+            site.locator('xpath=/html/body/table/tbody/tr[1]/td/div/form[2]/ul/li[1]/a/img').click()
+            if manualmente == 'S' or manualmente == 's':
+                input('Processo travado, insira as informações até e entra na aba FORNECEDORES, depois clique em Enter...')
+            else:
+                time.sleep(1)
+                site.fill('xpath=/html/body/table/tbody/tr[2]/td/table/tbody/tr/td[2]/div/table[1]/tbody/tr[4]/td/form/table'
+                          '/tbody/tr[1]/td/div/div[2]/table/tbody/tr[2]/td[2]/input', cliente)
+                time.sleep(1.5)
+                site.locator('xpath=//*[@id="pesquisarUsuarios:btnPesquisar"]').click()
+                time.sleep(1.5)
+                validacao_cliente_existe = cliente_nao_encontrado(site)
+                if validacao_cliente_existe == True:
+                    list_not_client.append(cliente)
+                    print(f'{cnpj_cliente_arquivo}: Não é cliente ou é filial')
+                    with io.open('not_client.txt', 'a', encoding='utf-8') as file:
+                        file.write(f'{cnpj_cliente_arquivo}\n')
+                    continue
+                editar = site.locator('xpath=/html/body/table/tbody/tr[2]/td/table/tbody/tr/td[2]/div/table[1]/tbody/tr[4]'
+                                      '/td/form/table/tbody/tr[3]/td/div/div[2]/table/tbody/tr').count()
 
-        try:
-            if editar != 1 and editar > 0:
-                site.locator('xpath=/html/body/table/tbody/tr[2]/td/table/tbody/tr/td[2]/div/table[1]/tbody/tr[4]'
-                             '/td/form/table/tbody/tr[3]/td/div/div[2]/table/tbody/tr[1]/td[6]/a').click()
-            if editar == 1:
-                site.locator('xpath=/html/body/table/tbody/tr[2]/td/table/tbody/tr/td[2]/div/table[1]/tbody/tr[4]'
-                             '/td/form/table/tbody/tr[3]/td/div/div[2]/table/tbody/tr/td[6]/a').click()
-        except:
-            site.locator('xpath=/html/body/table/tbody/tr[2]/td/table/tbody/tr/td[2]/div/table[1]/tbody/tr[4]'
-                         '/td/form/table/tbody/tr[3]/td/div/div[2]/table/tbody/tr[1]/td[6]/a').click()
+                try:
+                    if editar != 1 and editar > 0:
+                        site.locator('xpath=/html/body/table/tbody/tr[2]/td/table/tbody/tr/td[2]/div/table[1]/tbody/tr[4]'
+                                     '/td/form/table/tbody/tr[3]/td/div/div[2]/table/tbody/tr[1]/td[6]/a').click()
+                    if editar == 1:
+                        site.locator('xpath=/html/body/table/tbody/tr[2]/td/table/tbody/tr/td[2]/div/table[1]/tbody/tr[4]'
+                                     '/td/form/table/tbody/tr[3]/td/div/div[2]/table/tbody/tr/td[6]/a').click()
+                except:
+                    site.locator('xpath=/html/body/table/tbody/tr[2]/td/table/tbody/tr/td[2]/div/table[1]/tbody/tr[4]'
+                                 '/td/form/table/tbody/tr[3]/td/div/div[2]/table/tbody/tr[1]/td[6]/a').click()
 
-        site.locator('xpath=/html/body/table/tbody/tr[2]/td/table/tbody/tr/td[2]/div/table[1]/tbody/tr[1]/td/form'
-                     '/table/tbody/tr[2]/td/div/div/table/tbody/tr[1]/td/table/tbody/tr/td[8]/table/tbody/tr/td[2]'
-                     '/table/tbody/tr/td/table/tbody/tr/td[2]').click()  # aba fornecedor
-    return site
+                site.locator('xpath=/html/body/table/tbody/tr[2]/td/table/tbody/tr/td[2]/div/table[1]/tbody/tr[1]/td/form'
+                             '/table/tbody/tr[2]/td/div/div/table/tbody/tr[1]/td/table/tbody/tr/td[8]/table/tbody/tr/td[2]'
+                             '/table/tbody/tr/td/table/tbody/tr/td[2]').click()  # aba fornecedor
+                try:
+                    select_element = site.locator(
+                        'xpath=/html/body/table/tbody/tr[2]/td/table/tbody/tr/td[2]/div/table[1]/tbody'
+                        '/tr[1]/td/form/table/tbody/tr[2]/td/div/div/table/tbody/tr[2]/td/table/tbody'
+                        '/tr/td/div[2]/div[2]/span[1]/select')
+                    select_handle = select_element.element_handle()
+                    opcao_desejada = select_handle.query_selector('option[value="6453"]')
+                    if not opcao_desejada:
+                        print(f'{cnpj_cliente_arquivo}: Não tem o fornecedor')
+                        with io.open('nao_tem_fornecedor.txt', 'a', encoding='utf-8') as file:
+                            file.write(f'{cnpj_cliente_arquivo}\n')
+                        continue
+                    else:
+                        select_handle.select_option(value='6453')
+                        time.sleep(0.5)
+                        inserir_infos(site)
+                except Exception as E:
+                    print(E)
+            return site
 
 
 def inserir_infos(site):
-    input('Selecione o fornecedor e o representante e pressione o enter...')
-    validacao = input('Inserir CNPj em um campo especifico (Deixe vazio se não) ?: ')
+    #input('Selecione o fornecedor e o representante e pressione o enter...')
+    #validacao = input('Inserir CNPj em um campo especifico (Deixe vazio se não) ?: ')
+    validacao = ''
 
     if not validacao:
         while True:
             for cliente in range(1, 11):  # de 1 a 10
+                time.sleep(0.5)
                 qtd_linhas = site.locator('xpath=/html/body/table/tbody/tr[2]/td/table/tbody/tr/td[2]/div'
                                           '/table[1]/tbody/tr[1]/td/form/table/tbody/tr[2]/td/div/div/table'
                                           '/tbody/tr[2]/td/table/tbody/tr/td/div[2]/div[2]/table[2]/tbody'
@@ -83,8 +131,12 @@ def inserir_infos(site):
                           '/input', cnpj_cliente)
 
                 if qtd_linhas != 10 and qtd_linhas == cliente:
-                    input('Clique em salvar as condicoes.')
-                    print('Finalizando a automacao :)')
+                    #input('Clique em salvar as condicoes.')
+                    element = site.query_selector('input[type="button"][value="Salvar"]')
+                    element.click()
+                    #print('Finalizando a automacao :)')
+                    with io.open('condicoes_salvas.txt', 'a', encoding='utf-8') as file:
+                        file.write(f'{cnpj_cliente}\n')
                     return
 
             site.locator('xpath=/html/body/table/tbody/tr[2]/td/table/tbody/tr/td[2]/div/table[1]/tbody'
@@ -93,7 +145,8 @@ def inserir_infos(site):
                          '/tr/td[15]').click()
             time.sleep(1)
     else:
-        cnpj_aonde = input('Em que campo colocar o cnpj do cliente:\n1 - Codigo\n2 - Usuario\n3 - Senha\n: ')
+        #  cnpj_aonde = input('Em que campo colocar o cnpj do cliente:\n1 - Codigo\n2 - Usuario\n3 - Senha\n: ')
+        cnpj_aonde = ''
         while True:
             for cliente in range(1, 11):  # de 1 a 10
                 qtd_linhas = site.locator('xpath=/html/body/table/tbody/tr[2]/td/table/tbody/tr/td[2]/div'
@@ -132,14 +185,16 @@ def inserir_infos(site):
             time.sleep(1)
 
 
-def rodar():
-    site = entrar_na_tela_cond()
-    try:
-        inserir_infos(site)
-    except:
-        print('Deu problema no processo de inserir informações, reinicie o processo.')
+def rodar(site):
+    autenticar(site)
+    entrar_na_tela_cond(site)
+    # try:
+    #     inserir_infos(site)
+    # except Exception as E:
+    #     print(f'Deu problema no processo de inserir informações, reinicie o processo.\n{E}')
 
 
 with sync_playwright() as p:
     navegador = p.firefox.launch(headless=False)
-    rodar()
+    site = navegador.new_page()
+    rodar(site)
