@@ -174,7 +174,6 @@ def inserir_infos(site, cliente_do_for):
                       '/input').input_value()
             if cnpj_validacao_se_ja_foi_preenchido in lista_cnpjs:
                 break
-
         # input('Clique em salvar as condicoes.')
         element = site.query_selector('input[type="button"][value="Salvar"]')
         element.click()
