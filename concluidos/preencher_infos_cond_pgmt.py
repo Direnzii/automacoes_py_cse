@@ -28,19 +28,24 @@ def autenticar(site):
 def cliente_nao_encontrado(site):
     return site.locator('xpath=//*[@id="inputHiddenMessage"]').is_visible()
 
+
 def verificar_se_ja_processou(cliente):
     condicao = cliente in abrir_arquivo('nao_tem_fornecedor.txt')
     condicao2 = cliente in abrir_arquivo('not_client.txt')
     condicao3 = cliente in abrir_arquivo('condicoes_salvas.txt')
-    if condicao == True or condicao2 == True or condicao3 == True:
+    condicao4 = cliente in abrir_arquivo('erro_no_cliente.txt')
+    if condicao == True or condicao2 == True or condicao3 == True or condicao4 == True:
         return True
     else:
         return False
 
+
+def verificar_chat(site):
+    return site.locator('xpath=/html/body/jdiv/jdiv/jdiv[3]/jdiv[1]/jdiv/jdiv').is_visible()
+
 def entrar_na_tela_cond(site):
     manualmente = 'N'  # input('Deseja inserir as informações e ir até a aba Fornecedores, manualmente ? (S) (N): ')
     # cliente = input('Insira o cnpj do cliente: ')
-    # cliente = '10834344000150'
     for cliente in abrir_arquivo():
         cnpj_cliente_arquivo = cliente
         validacao_processou = verificar_se_ja_processou(cliente)
@@ -49,10 +54,15 @@ def entrar_na_tela_cond(site):
             if manualmente == 'S' or manualmente == 's':
                 input('Processo travado, insira as informações até e entra na aba FORNECEDORES, depois clique em Enter...')
             else:
+                #cliente = '26246183000547' #############
                 time.sleep(1)
                 site.fill('xpath=/html/body/table/tbody/tr[2]/td/table/tbody/tr/td[2]/div/table[1]/tbody/tr[4]/td/form/table'
                           '/tbody/tr[1]/td/div/div[2]/table/tbody/tr[2]/td[2]/input', cliente)
-                time.sleep(1.5)
+                time.sleep(4)
+                validacao_chat = verificar_chat(site)
+                if validacao_chat:
+                    site.locator('xpath=/html/body/jdiv/jdiv/jdiv[3]/jdiv[1]/jdiv/jdiv').click()
+                    time.sleep(1)
                 site.locator('xpath=//*[@id="pesquisarUsuarios:btnPesquisar"]').click()
                 time.sleep(1.5)
                 validacao_cliente_existe = cliente_nao_encontrado(site)
@@ -92,10 +102,15 @@ def entrar_na_tela_cond(site):
                             file.write(f'{cnpj_cliente_arquivo}\n')
                         continue
                     else:
-                        select_handle.select_option(value='6453')
-                        time.sleep(0.5)
-                        inserir_infos(site, cliente)
-                        continue
+                        try:
+                            select_handle.select_option(value='6453')
+                            time.sleep(0.5)
+                            inserir_infos(site, cliente)
+                            continue
+                        except Exception as E:
+                            with io.open('erro_no_cliente.txt', 'a', encoding='utf-8') as file:
+                                file.write(f'{cnpj_cliente_arquivo}\n')
+                            continue
                 except Exception as E:
                     print(E)
             return site
@@ -107,13 +122,18 @@ def inserir_infos(site, cliente_do_for):
     validacao = ''
 
     if not validacao:
+        #linha_validacao = 1  # Valor referencia
+        cnpj_cliente_validacao = ''
+        lista_cnpjs = []
         while True:
-            for linha in range(1, 11):  # de 1 a 10
+            qtd_linhas = site.locator('xpath=/html/body/table/tbody/tr[2]/td/table/tbody/tr/td[2]/div'
+                                      '/table[1]/tbody/tr[1]/td/form/table/tbody/tr[2]/td/div/div/table'
+                                      '/tbody/tr[2]/td/table/tbody/tr/td/div[2]/div[2]/table[2]/tbody'
+                                      f'/tr[1]/td/table/tbody/tr').count()
+
+            for linha in range(1, qtd_linhas + 1):
                 time.sleep(0.5)
-                qtd_linhas = site.locator('xpath=/html/body/table/tbody/tr[2]/td/table/tbody/tr/td[2]/div'
-                                          '/table[1]/tbody/tr[1]/td/form/table/tbody/tr[2]/td/div/div/table'
-                                          '/tbody/tr[2]/td/table/tbody/tr/td/div[2]/div[2]/table[2]/tbody'
-                                          f'/tr[1]/td/table/tbody/tr').count()
+
                 cnpj_cliente = site.locator('xpath=/html/body/table/tbody/tr[2]/td/table/tbody/tr/td[2]/div'
                                             '/table[1]/tbody/tr[1]/td/form/table/tbody/tr[2]/td/div/div/table'
                                             '/tbody/tr[2]/td/table/tbody/tr/td/div[2]/div[2]/table[2]/tbody'
@@ -130,27 +150,40 @@ def inserir_infos(site, cliente_do_for):
                           '/tr[1]/td/form/table/tbody/tr[2]/td/div/div/table/tbody/tr[2]/td/table/tbody'
                           f'/tr/td/div[2]/div[2]/table[2]/tbody/tr[1]/td/table/tbody/tr[{linha}]/td[5]'
                           '/input', cnpj_cliente)
+                if not cnpj_cliente in lista_cnpjs:
+                    lista_cnpjs.append(cnpj_cliente)
+            #linha_validacao = linha
+            cnpj_cliente_validacao = cnpj_cliente
 
-                # button_element = site.locator(
-                #     'xpath=/html/body/table/tbody/tr[2]/td/table/tbody/tr/td[2]/div/table[1]/tbody'
-                #     '/tr[1]/td/form/table/tbody/tr[2]/td/div/div/table/tbody/tr[2]/td/table/tbody'
-                #     '/tr/td/div[2]/div[2]/table[2]/tbody/tr[1]/td/table/tfoot/tr/td/div/table/tbody'
-                #     '/tr/td[10]')  # Tentativa de ser se o botão é clicavel ou nao
-
-                if qtd_linhas != 10 and qtd_linhas == linha:
-                    #input('Clique em salvar as condicoes.')
-                    element = site.query_selector('input[type="button"][value="Salvar"]')
-                    element.click()
-                    time.sleep(0.5)
-                    #print('Finalizando a automacao :)')
-                    with io.open('condicoes_salvas.txt', 'a', encoding='utf-8') as file:
-                        file.write(f'{cliente_do_for}\n')
-                    return
-            site.locator('xpath=/html/body/table/tbody/tr[2]/td/table/tbody/tr/td[2]/div/table[1]/tbody'
-                         '/tr[1]/td/form/table/tbody/tr[2]/td/div/div/table/tbody/tr[2]/td/table/tbody'
-                         '/tr/td/div[2]/div[2]/table[2]/tbody/tr[1]/td/table/tfoot/tr/td/div/table/tbody'
-                         '/tr/td[10]').click()
+            try:
+                Validar_botao_de_paginar = \
+                    site.locator('xpath=/html/body/table/tbody/tr[2]/td/table/tbody/tr/td[2]/div/table[1]/tbody/tr[1]/td'
+                             '/form/table/tbody/tr[2]/td/div/div/table/tbody/tr[2]/td/table/tbody/tr/td/div[2]'
+                             '/div[2]/table[2]/tbody/tr[1]/td/table/tfoot/tr/td/div/table/tbody/tr/td[8]').is_visible()
+                if Validar_botao_de_paginar:
+                    site.locator('xpath=/html/body/table/tbody/tr[2]/td/table/tbody/tr/td[2]/div/table[1]/tbody/tr[1]/td'
+                                 '/form/table/tbody/tr[2]/td/div/div/table/tbody/tr[2]/td/table/tbody/tr/td/div[2]'
+                                 '/div[2]/table[2]/tbody/tr[1]/td/table/tfoot/tr/td/div/table/tbody/tr/td[8]').click()
+            except Exception as E:
+                break
             time.sleep(1)
+
+            cnpj_validacao_se_ja_foi_preenchido = site.locator('xpath=/html/body/table/tbody/tr[2]/td/table/tbody/tr/td[2]/div/table[1]/tbody'
+                      '/tr[1]/td/form/table/tbody/tr[2]/td/div/div/table/tbody/tr[2]/td/table/tbody'
+                      f'/tr/td/div[2]/div[2]/table[2]/tbody/tr[1]/td/table/tbody/tr[1]/td[5]'
+                      '/input').input_value()
+            if cnpj_validacao_se_ja_foi_preenchido in lista_cnpjs:
+                break
+        # input('Clique em salvar as condicoes.')
+        element = site.query_selector('input[type="button"][value="Salvar"]')
+        element.click()
+        time.sleep(0.5)
+        # print('Finalizando a automacao :)')
+        with io.open('condicoes_salvas.txt', 'a', encoding='utf-8') as file:
+            file.write(f'{cliente_do_for}\n')
+            print(f"{cliente_do_for}: OK")
+        return
+
     else:
         #  cnpj_aonde = input('Em que campo colocar o cnpj do cliente:\n1 - Codigo\n2 - Usuario\n3 - Senha\n: ')
         cnpj_aonde = ''
@@ -204,7 +237,7 @@ def rodar(site):
 with sync_playwright() as p:
     while True:
         try:
-            navegador = p.firefox.launch(headless=True)
+            navegador = p.firefox.launch(headless=False)
             site = navegador.new_page()
             rodar(site)
             site.close()
@@ -212,6 +245,6 @@ with sync_playwright() as p:
             site.close()
             navegador.close()
             print('Deu um problema, refazendo o processo')
-            navegador = p.firefox.launch(headless=True)
+            navegador = p.firefox.launch(headless=False)
             site = navegador.new_page()
             rodar(site)
