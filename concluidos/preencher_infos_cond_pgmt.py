@@ -74,7 +74,7 @@ def entrar_na_tela_cond(nav):
                 if validacao_cliente_existe:
                     list_not_client.append(cliente)
                     print(f'{cnpj_cliente_arquivo}: Não é cliente ou é filial')
-                    with io.open('not_client.txt', 'a', encoding='utf-8') as file:
+                    with io.open('../demais_projetos/arquivos_usados_pelo_cnpjs_na_condicao_pgmt/not_client.txt', 'a', encoding='utf-8') as file:
                         file.write(f'{cnpj_cliente_arquivo}\n')
                     continue
                 editar = nav.locator(
@@ -107,7 +107,8 @@ def entrar_na_tela_cond(nav):
                     opcao_desejada = select_handle.query_selector('option[value="6453"]')
                     if not opcao_desejada:
                         print(f'{cnpj_cliente_arquivo}: Não tem o fornecedor')
-                        with io.open('nao_tem_fornecedor.txt', 'a', encoding='utf-8') as file:
+                        with io.open(
+                                '../demais_projetos/arquivos_usados_pelo_cnpjs_na_condicao_pgmt/nao_tem_fornecedor.txt', 'a', encoding='utf-8') as file:
                             file.write(f'{cnpj_cliente_arquivo}\n')
                         continue
                     else:
@@ -117,7 +118,8 @@ def entrar_na_tela_cond(nav):
                             inserir_infos(nav, cliente)
                             continue
                         except Exception as Error:
-                            with io.open('erro_no_cliente.txt', 'a', encoding='utf-8') as file:
+                            with io.open(
+                                    '../demais_projetos/arquivos_usados_pelo_cnpjs_na_condicao_pgmt/erro_no_cliente.txt', 'a', encoding='utf-8') as file:
                                 file.write(f'{cnpj_cliente_arquivo}\n')
                                 print(Error)
                             continue
@@ -192,7 +194,7 @@ def inserir_infos(nav, cliente_do_for):
         element.click()
         time.sleep(0.5)
         # print('Finalizando a automacao :)')
-        with io.open('condicoes_salvas.txt', 'a', encoding='utf-8') as file:
+        with io.open('../demais_projetos/arquivos_usados_pelo_cnpjs_na_condicao_pgmt/condicoes_salvas.txt', 'a', encoding='utf-8') as file:
             file.write(f'{cliente_do_for}\n')
             print(f"{cliente_do_for}: OK")
         return
