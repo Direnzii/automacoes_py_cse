@@ -506,7 +506,7 @@ class liberarForn:
                 check_box_compradores = '//*[@id="administrarCliente:chkTodosCompradores"]'
                 validar_se_checkbox_filiais_ta_checada = site.locator(f'xpath={check_box_filiais}').is_checked()
                 validar_se_checkbox_compradores_ta_checada = site.locator(f'xpath={check_box_compradores}').is_checked()
-                if validar_se_checkbox_filiais_ta_checada == False:
+                if not validar_se_checkbox_filiais_ta_checada:
                     site.locator(f'xpath={check_box_filiais}').click()
                 if validar_se_checkbox_compradores_ta_checada == False:
                     site.locator(f'xpath={check_box_compradores}').click()
