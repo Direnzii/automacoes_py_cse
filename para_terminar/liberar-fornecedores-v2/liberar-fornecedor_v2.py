@@ -7,7 +7,6 @@ from datetime import datetime
 
 
 class liberarForn:
-
     lista_matrizes = []
 
     lista_filiais = []
@@ -24,7 +23,7 @@ class liberarForn:
         site.locator('xpath=//*[@id="frmLogin:loginButton"]').click()
         time.sleep(0.2)
 
-    def abrir_arquivo(self, nome='cnpjs.txt'):
+    def abrir_arquivo(self, nome='JMF.txt'):
         with open(nome) as file:
             arquivo = file.read().replace(",", ' ').split()
         return arquivo
@@ -429,25 +428,25 @@ class liberarForn:
                         print(f"Processando cliente {cliente} ...")
                         cliente = int(cliente.translate(str.maketrans('', '', string.punctuation)))
                         validacao = self.validar_listas(cliente)
-                        if validacao == False:
+                        if not validacao:
                             caminho_botao_liberacao_aba_cliente = '/html/body/table/tbody/tr[2]/td/table/tbody/tr/td[2]/div/table[1]' \
                                                                   '/tbody/tr[1]/td/form/table[1]/tbody/tr/td[1]/input'
 
                             ja_ta_dentro = site.locator(f'xpath={caminho_botao_liberacao_aba_cliente}').is_visible()
-                            if ja_ta_dentro == False:
+                            if not ja_ta_dentro:
                                 self.clicar_aba_cliente(cliente)
                             validacao_cliente_cotefacil = self.dentro_aba_cliente(cliente)
-                            if validacao_cliente_cotefacil == True:
+                            if validacao_cliente_cotefacil:
                                 da_para_ver_botao_ativar_inativar = self.validar_se_da_para_ver_elemento(
                                     caminho_botao_ativar_inativar, cliente)
-                                if da_para_ver_botao_ativar_inativar == True:
+                                if da_para_ver_botao_ativar_inativar:
                                     input_matriz = site.locator(
                                         'xpath=/html/body/table/tbody/tr[2]/td/table/tbody/tr/td[2]/div/table[1]'
                                         '/tbody/tr[1]/td/form/table/tbody/tr[2]/td/div/div/table/tbody/tr[2]/td'
                                         '/table/tbody/tr/td/div/div[2]/table/tbody/tr[2]/td[2]/input').input_value()  # pegar o valor do campo "cnpj matriz"
                                     if not input_matriz:
                                         validacao_matriz_1 = self.validar_listas(int(cliente))
-                                        if validacao_matriz_1 == False:
+                                        if not validacao_matriz_1:
                                             self.lista_matrizes.append(
                                                 int(cliente))  # validou que o cnpj não possui matriz setada (logo é uma matriz)
                                         print(f"Pegando as filiais do cnpj {cliente}")
@@ -457,7 +456,7 @@ class liberarForn:
                                         print("É matriz, ver se tem filiais...")
                                         self.lista_filiais.append(int(cliente))  # colocando a filial na lista filiais
                                         validacao_matriz_2 = self.validar_listas(int(input_matriz))
-                                        if validacao_matriz_2 == False:
+                                        if not validacao_matriz_2:
                                             self.lista_matrizes.append(
                                                 int(input_matriz))  # validou que o cnpj possui matriz setada (logo é uma filial), estou colocando o input da matriz na lista matrizes
                                             self.reiniciar_a_tela(cliente)
@@ -467,11 +466,11 @@ class liberarForn:
                                             print("Pegando as filiais da matriz...")
                                             self.get_filiais()
                                             self.reiniciar_a_tela(cliente)
-                            if validacao_cliente_cotefacil == False:
+                            if not validacao_cliente_cotefacil:
                                 self.lista_nao_clientes.append(int(cliente))
                                 self.reiniciar_a_tela(cliente)
                                 continue
-                        if validacao == True:
+                        if validacao:
                             continue
                     if mega_validacao < 10:
                         print('Cliente não considerado por ter menos de 10 caracteres')
@@ -502,12 +501,12 @@ class liberarForn:
                          '/tr/td[2]/table/tbody/tr/td/table/tbody/tr/td[2]').click(timeout=60000)
             time.sleep(0.5)
             loading = self.validar_se_da_pra_ver_loading()
-            if loading == False:
+            if not loading:
                 check_box_filiais = '//*[@id="administrarCliente:chkTodasFiliais"]'
                 check_box_compradores = '//*[@id="administrarCliente:chkTodosCompradores"]'
                 validar_se_checkbox_filiais_ta_checada = site.locator(f'xpath={check_box_filiais}').is_checked()
                 validar_se_checkbox_compradores_ta_checada = site.locator(f'xpath={check_box_compradores}').is_checked()
-                if validar_se_checkbox_filiais_ta_checada == False:
+                if not validar_se_checkbox_filiais_ta_checada:
                     site.locator(f'xpath={check_box_filiais}').click()
                 if validar_se_checkbox_compradores_ta_checada == False:
                     site.locator(f'xpath={check_box_compradores}').click()
@@ -535,7 +534,7 @@ class liberarForn:
                 site.locator('xpath=/html/body/table/tbody/tr[2]/td/table/tbody/tr/td[2]/div/table[1]/tbody/tr[4]'
                              '/td/form/table/tbody/tr[3]/td/div/div[2]/table/tbody/tr/td[6]/a').click()  # editar
             except:
-                a = 'mais de um' #####
+                a = 'mais de um'  #####
                 input('Tem mais de um editar, clique em um e press enter ...')
 
             site.locator(
@@ -550,7 +549,7 @@ class liberarForn:
             site.fill(
                 'xpath=//*[@id="administrarCliente:sggRepresentante"]'
                 , representante)
-            a = 'esperando para remover' #####
+            a = 'esperando para remover'  #####
             input('Remova o representante e press enter ...')
             site.fill(
                 'xpath=//*[@id="administrarCliente:fornecedor"]'
@@ -558,7 +557,7 @@ class liberarForn:
             site.fill(
                 'xpath=//*[@id="administrarCliente:sggRepresentante"]'
                 , representante_add)
-            a = 'clicar em adicionar' #####
+            a = 'clicar em adicionar'  #####
             input('Adicione o representante e press enter ...')
             site.locator('xpath=/html/body/table/tbody/tr[1]/td/div/form[2]/ul/li[1]').click()  # voltar
 
@@ -575,9 +574,13 @@ with sync_playwright() as p:
     inicio = now.strftime("%H:%M:%S")
     print('Inicio do processo: ', inicio)
 
-    parametro_1 = input('Voce quer só realizar a liberação do fornecedor de forma semiautomatica ? (S) (N): ')
+    # parametro_1 = input('Voce quer só realizar a liberação do fornecedor de forma semiautomatica ? (S) (N): ')
+    parametro_1 = 'N'  ########## APAGAR
     if parametro_1 == 'S' or parametro_1 == 's':
         liberar_forn.liberar_semi_auto()
     else:
-        lista = liberar_forn.organizar_listas()
-        liberar_forn.liberar_fornecedor(lista)
+        try:
+            lista = liberar_forn.organizar_listas()
+            liberar_forn.liberar_fornecedor(lista)
+        except Exception as Error:
+            print(Error)
