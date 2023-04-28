@@ -89,9 +89,9 @@ class liberarForn:
             return True
         if nao_cliente == True:
             return True
-        if liberar==True:
+        if liberar == True:
             if not any([condicao, condicao2,
-                    condicao3]):
+                        condicao3]):
                 return False
         if any([condicao, condicao2,
                 condicao3, condicao4]):
@@ -209,13 +209,13 @@ class liberarForn:
                                                  '/div/table[1]/tbody/tr[1]/td/form/table[2]/tbody/tr[3]/td/div'
                                                  '/div[2]/div/div/table/tbody/tr').is_visible()
                 for i in range(1, 4):
-                    if linha_cliente_ver == False:
+                    if not linha_cliente_ver:
                         print(f"Não deu pra ver se é cliente cotefacil ou não, tentando de novo, tentativa {i} de 3...")
                         time.sleep(3.5)
                         linha_cliente_ver = site.locator('xpath=/html/body/table/tbody/tr[2]/td/table/tbody/tr/td[2]'
                                                          '/div/table[1]/tbody/tr[1]/td/form/table[2]/tbody/tr[3]/td/div'
                                                          '/div[2]/div/div/table/tbody/tr').is_visible()
-                    if linha_cliente_ver == True:
+                    if linha_cliente_ver:
                         print("Deu certo a validação é cliente cotefacil sim...")
                         return linha_cliente_ver
                 return linha_cliente_ver
@@ -225,7 +225,7 @@ class liberarForn:
                 if contador == 1:  # 10
                     try:
                         loading = self.validar_se_da_pra_ver_loading()
-                        if loading == False:
+                        if not loading:
                             site.locator('xpath=//*[@id="pesquisarClientes:btnPesquisar"]').click()
                             contador = 0
                             contador2 += 1
@@ -400,7 +400,6 @@ class liberarForn:
                 continue
         return da_para_ver
 
-
     def validar_se_da_pra_ver_erro(self, caminho_elemento_xpath):
         time.sleep(0.5)
         da_para_ver = site.locator(f'xpath={caminho_elemento_xpath}').is_visible()
@@ -496,7 +495,7 @@ class liberarForn:
                                         validacao_matriz_1 = self.validar_listas(int(cliente))
                                         if not validacao_matriz_1:
                                             with io.open('cnpjs_matrizes.txt',
-                                                    'a', encoding='utf-8') as file:
+                                                         'a', encoding='utf-8') as file:
                                                 file.write(f'{int(cliente)}\n')
                                             self.lista_matrizes.append(
                                                 int(cliente))  # validou que o cnpj não possui matriz setada (logo é uma matriz)
@@ -515,7 +514,7 @@ class liberarForn:
 
                                         if not self.validar_listas(int(input_matriz)):
                                             with io.open('cnpjs_matrizes.txt',
-                                                    'a', encoding='utf-8') as file:
+                                                         'a', encoding='utf-8') as file:
                                                 file.write(f'{input_matriz}\n')
 
                                             self.lista_matrizes.append(
@@ -587,7 +586,7 @@ class liberarForn:
                             '/td/form/table/tbody/tr[3]/td/div/div[2]/table/tbody/tr/td[6]/a').click()
                 except Exception as Error:
                     site.locator('xpath=/html/body/table/tbody/tr[2]/td/table/tbody/tr/td[2]/div/table[1]/tbody/tr[4]'
-                                '/td/form/table/tbody/tr[3]/td/div/div[2]/table/tbody/tr[1]/td[6]/a').click()
+                                 '/td/form/table/tbody/tr[3]/td/div/div[2]/table/tbody/tr[1]/td[6]/a').click()
                     print(Error)
                 site.locator(
                     'xpath=/html/body/table/tbody/tr[2]/td/table/tbody/tr/td[2]/div/table[1]/tbody/tr[1]/td/form'
@@ -605,7 +604,8 @@ class liberarForn:
                                 f'xpath={check_box_filiais}').is_checked()
                             if not validar_se_checkbox_filiais_ta_checada:
                                 site.locator(f'xpath={check_box_filiais}').click()
-                        validar_se_checkbox_compradores_ta_checada = site.locator(f'xpath={check_box_compradores}').is_checked()
+                        validar_se_checkbox_compradores_ta_checada = site.locator(
+                            f'xpath={check_box_compradores}').is_checked()
                         if not validar_se_checkbox_compradores_ta_checada:
                             site.locator(f'xpath={check_box_compradores}').click()
                         select_element = site.locator(
