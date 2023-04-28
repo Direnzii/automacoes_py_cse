@@ -74,7 +74,7 @@ def entrar_na_tela_cond(nav):
                 if validacao_cliente_existe:
                     list_not_client.append(cliente)
                     print(f'{cnpj_cliente_arquivo}: Não é cliente ou é filial')
-                    with io.open('../demais_projetos/arquivos_usados_pelo_cnpjs_na_condicao_pgmt/not_client.txt', 'a', encoding='utf-8') as file:
+                    with io.open('not_client.txt', 'a', encoding='utf-8') as file:
                         file.write(f'{cnpj_cliente_arquivo}\n')
                     continue
                 editar = nav.locator(
@@ -104,22 +104,22 @@ def entrar_na_tela_cond(nav):
                         '/tr[1]/td/form/table/tbody/tr[2]/td/div/div/table/tbody/tr[2]/td/table/tbody'
                         '/tr/td/div[2]/div[2]/span[1]/select')
                     select_handle = select_element.element_handle()
-                    opcao_desejada = select_handle.query_selector('option[value="6453"]')
+                    opcao_desejada = select_handle.query_selector('option[value="7983"]')
                     if not opcao_desejada:
                         print(f'{cnpj_cliente_arquivo}: Não tem o fornecedor')
                         with io.open(
-                                '../demais_projetos/arquivos_usados_pelo_cnpjs_na_condicao_pgmt/nao_tem_fornecedor.txt', 'a', encoding='utf-8') as file:
+                                'nao_tem_fornecedor.txt', 'a', encoding='utf-8') as file:
                             file.write(f'{cnpj_cliente_arquivo}\n')
                         continue
                     else:
                         try:
-                            select_handle.select_option(value='6453')
+                            select_handle.select_option(value='7983')
                             time.sleep(0.5)
                             inserir_infos(nav, cliente)
                             continue
                         except Exception as Error:
                             with io.open(
-                                    '../demais_projetos/arquivos_usados_pelo_cnpjs_na_condicao_pgmt/erro_no_cliente.txt', 'a', encoding='utf-8') as file:
+                                    'erro_no_cliente.txt', 'a', encoding='utf-8') as file:
                                 file.write(f'{cnpj_cliente_arquivo}\n')
                                 print(Error)
                             continue
@@ -173,10 +173,12 @@ def inserir_infos(nav, cliente_do_for):
                         '/form/table/tbody/tr[2]/td/div/div/table/tbody/tr[2]/td/table/tbody/tr/td/div[2]'
                         '/div[2]/table[2]/tbody/tr[1]/td/table/tfoot/tr/td/div/table/tbody/tr/td[8]').is_visible()
                 if Validar_botao_de_paginar:
-                    nav.locator(
-                        'xpath=/html/body/table/tbody/tr[2]/td/table/tbody/tr/td[2]/div/table[1]/tbody/tr[1]/td'
-                        '/form/table/tbody/tr[2]/td/div/div/table/tbody/tr[2]/td/table/tbody/tr/td/div[2]'
-                        '/div[2]/table[2]/tbody/tr[1]/td/table/tfoot/tr/td/div/table/tbody/tr/td[8]').click()
+                    # nav.locator(
+                    #     'td.rich-datascr-button:nth-child(15)').click()
+
+                    element_paginacao = nav.query_selector('td.rich-datascr-button[onclick*="fastforward"]')
+                    if element_paginacao:
+                        element_paginacao.click()
             except Exception as Error:
                 print(Error)
                 break
@@ -194,7 +196,7 @@ def inserir_infos(nav, cliente_do_for):
         element.click()
         time.sleep(0.5)
         # print('Finalizando a automacao :)')
-        with io.open('../demais_projetos/arquivos_usados_pelo_cnpjs_na_condicao_pgmt/condicoes_salvas.txt', 'a', encoding='utf-8') as file:
+        with io.open('condicoes_salvas.txt', 'a', encoding='utf-8') as file:
             file.write(f'{cliente_do_for}\n')
             print(f"{cliente_do_for}: OK")
         return
