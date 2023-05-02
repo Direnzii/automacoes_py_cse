@@ -705,7 +705,8 @@ with sync_playwright() as p:
                 liberar_forn.autenticar()
                 # if liberar_forn.organizar_listas():
                 if 1 == 1:
-                    lista = liberar_forn.abrir_arquivo("cnpjs_matrizes.txt")
+                    # lista = liberar_forn.abrir_arquivo("cnpjs_matrizes.txt")
+                    lista = liberar_forn.abrir_arquivo("teste_excluir.txt")
                     liberar_forn.liberar_fornecedor(lista)
                     break
             except Exception as Error:
