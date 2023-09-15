@@ -10,12 +10,17 @@ def hora():
 
 
 def conectar_ao_banco():
-    usr = os.getenv(key='USER_ORACLE_OFICIAL')
-    psswrd = os.getenv(key='SENHA_ORACLE_OFICIAL')
-    dns_port_SID = os.getenv(key='DNS_ORACLE_OFICIAL')
+    user = os.getenv('ORACLE_USER')
+    password = os.getenv('ORACLE_PASSWORD')
+    host = os.getenv('ORACLE_HOST')
+    port = os.getenv('ORACLE_PORT')
+    db_name = os.getenv('ORACLE_DB_NAME')
 
-    connection = oracledb.connect(user=usr, password=psswrd,
-                                  dsn=dns_port_SID)
+    connection = oracledb.connect(
+        user=user,
+        password=password,
+        dsn=f"{host}:{port}/{db_name}"
+    )
     cursor = connection.cursor()
     return cursor
 
