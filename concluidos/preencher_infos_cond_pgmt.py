@@ -7,7 +7,7 @@ list_not_client = []
 
 
 def abrir_arquivo(nome='cnpjs.txt'):
-    with open(nome) as file:
+    with open(nome, 'r') as file:
         arquivo = file.read().replace(",", ' ').split()
     return arquivo
 
@@ -31,12 +31,14 @@ def cliente_nao_encontrado(site_cliente_nao_encontrado):
 
 
 def verificar_se_ja_processou(cliente):
-    condicao = cliente in abrir_arquivo('nao_tem_fornecedor.txt')
-    condicao2 = cliente in abrir_arquivo('not_client.txt')
-    condicao3 = cliente in abrir_arquivo('condicoes_salvas.txt')
-    condicao4 = cliente in abrir_arquivo('erro_no_cliente.txt')
+    condicao = cliente in abrir_arquivo('../arquivos_saida_preencher_infos_pgmt/nao_tem_fornecedor.txt')
+    condicao2 = cliente in abrir_arquivo('../arquivos_saida_preencher_infos_pgmt/not_client.txt')
+    condicao3 = cliente in abrir_arquivo('../arquivos_saida_preencher_infos_pgmt/condicoes_salvas.txt')
+    condicao4 = cliente in abrir_arquivo('../arquivos_saida_preencher_infos_pgmt/erro_no_cliente.txt')
+    condicao5 = cliente in abrir_arquivo('../arquivos_saida_preencher_infos_pgmt/cliente_sem_representante.txt')
+    condicao6 = cliente in abrir_arquivo('../arquivos_saida_preencher_infos_pgmt/fornecedor.txt')
     if any([condicao, condicao2, condicao3,
-            condicao4]):  # if condicao == True or condicao2 == True or condicao3 == True or condicao4 == True:
+            condicao4, condicao5, condicao6]):  # if condicao == True or condicao2 == True or condicao3 == True or condicao4 == True:
         return True
     else:
         return False
@@ -46,10 +48,33 @@ def verificar_chat(site_verificar_chat):
     return site_verificar_chat.locator('xpath=/html/body/jdiv/jdiv/jdiv[3]/jdiv[1]/jdiv/jdiv').is_visible()
 
 
-def entrar_na_tela_cond(nav):
+def checar_se_tem_representante(nav):
+    select_element = nav.locator('#administrarCliente\:representanteCodigoCliente > select:nth-child(2)')
+    select_handle = select_element.element_handle()
+    id_fornecedor_opcao = '78637'  # ALTERAR AQUI
+    opcao_desejada = select_handle.query_selector(f'option[value="{id_fornecedor_opcao}"]')
+    if opcao_desejada:
+        return True
+    else:
+        return False
+
+
+def validar_se_fornecerdor(nav):
+    select = ('/html/body/table/tbody/tr[2]/td/table/tbody/tr/td[2]/div/table[1]/tbody/tr[1]/td/form/table/tbody/tr[2]'
+              '/td/div/div/table/tbody/tr[2]/td/table/tbody/tr/td/div/div[2]/table/tbody/tr[7]/td[2]/select')
+    try:
+        select_element = nav.locator(f'xpath={select}')
+        select_handle = select_element.element_handle(timeout=1000)
+        if select_handle:
+            return False
+    except:
+        return True
+
+
+def entrar_na_tela_cond(nav, lista_clientes):
     manualmente = 'N'  # input('Deseja inserir as informações e ir até a aba Fornecedores, manualmente ? (S) (N): ')
     # cliente = input('Insira o cnpj do cliente: ')
-    for cliente in abrir_arquivo():
+    for cliente in lista_clientes:
         cnpj_cliente_arquivo = cliente
         validacao_processou = verificar_se_ja_processou(cliente)
         if not validacao_processou:
@@ -74,7 +99,7 @@ def entrar_na_tela_cond(nav):
                 if validacao_cliente_existe:
                     list_not_client.append(cliente)
                     print(f'{cnpj_cliente_arquivo}: Não é cliente ou é filial')
-                    with io.open('not_client.txt', 'a', encoding='utf-8') as file:
+                    with io.open('../arquivos_saida_preencher_infos_pgmt/not_client.txt', 'a', encoding='utf-8') as file:
                         file.write(f'{cnpj_cliente_arquivo}\n')
                     continue
                 editar = nav.locator(
@@ -94,6 +119,12 @@ def entrar_na_tela_cond(nav):
                     nav.locator('xpath=/html/body/table/tbody/tr[2]/td/table/tbody/tr/td[2]/div/table[1]/tbody/tr[4]'
                                 '/td/form/table/tbody/tr[3]/td/div/div[2]/table/tbody/tr[1]/td[6]/a').click()
                     print(Error)
+                if validar_se_fornecerdor(nav):
+                    print(f'{cnpj_cliente_arquivo}: Fornecedor')
+                    with io.open(
+                            'fornecedor.txt', 'a', encoding='utf-8') as file:
+                        file.write(f'{cnpj_cliente_arquivo}\n')
+                    continue
                 nav.locator(
                     'xpath=/html/body/table/tbody/tr[2]/td/table/tbody/tr/td[2]/div/table[1]/tbody/tr[1]/td/form'
                     '/table/tbody/tr[2]/td/div/div/table/tbody/tr[1]/td/table/tbody/tr/td[8]/table/tbody/tr/td[2]'
@@ -104,22 +135,33 @@ def entrar_na_tela_cond(nav):
                         '/tr[1]/td/form/table/tbody/tr[2]/td/div/div/table/tbody/tr[2]/td/table/tbody'
                         '/tr/td/div[2]/div[2]/span[1]/select')
                     select_handle = select_element.element_handle()
-                    opcao_desejada = select_handle.query_selector('option[value="7983"]')
+                    id_fornecedor_opcao = '4370'  # ALTERAR AQUI
+                    opcao_desejada = select_handle.query_selector(f'option[value="{id_fornecedor_opcao}"]')
                     if not opcao_desejada:
                         print(f'{cnpj_cliente_arquivo}: Não tem o fornecedor')
                         with io.open(
-                                'nao_tem_fornecedor.txt', 'a', encoding='utf-8') as file:
+                                '../arquivos_saida_preencher_infos_pgmt/nao_tem_fornecedor.txt', 'a', encoding='utf-8') as file:
                             file.write(f'{cnpj_cliente_arquivo}\n')
                         continue
                     else:
                         try:
-                            select_handle.select_option(value='7983')
+                            select_handle.select_option(value=id_fornecedor_opcao)
+                            # dismap = 8400
+                            # gransmed = 4370
+                            #
                             time.sleep(0.5)
-                            inserir_infos(nav, cliente)
-                            continue
+                            if checar_se_tem_representante(nav):
+                                inserir_infos(nav, cliente)
+                                continue
+                            else:
+                                with io.open(
+                                        '../arquivos_saida_preencher_infos_pgmt/cliente_sem_representante.txt', 'a', encoding='utf-8') as file:
+                                    file.write(f'{cnpj_cliente_arquivo}\n')
+                                    print(f"{cnpj_cliente_arquivo}: Sem representante")
+                                continue
                         except Exception as Error:
                             with io.open(
-                                    'erro_no_cliente.txt', 'a', encoding='utf-8') as file:
+                                    '../arquivos_saida_preencher_infos_pgmt/erro_no_cliente.txt', 'a', encoding='utf-8') as file:
                                 file.write(f'{cnpj_cliente_arquivo}\n')
                                 print(Error)
                             continue
@@ -196,7 +238,7 @@ def inserir_infos(nav, cliente_do_for):
         element.click()
         time.sleep(0.5)
         # print('Finalizando a automacao :)')
-        with io.open('condicoes_salvas.txt', 'a', encoding='utf-8') as file:
+        with io.open('../arquivos_saida_preencher_infos_pgmt/condicoes_salvas.txt', 'a', encoding='utf-8') as file:
             file.write(f'{cliente_do_for}\n')
             print(f"{cliente_do_for}: OK")
         return
@@ -243,25 +285,36 @@ def inserir_infos(nav, cliente_do_for):
 
 
 def rodar(site_rodar):
-    autenticar(site_rodar)
-    entrar_na_tela_cond(site_rodar)
-    # try:
-    #     inserir_infos(site)
-    # except Exception as E:
-    #     print(f'Deu problema no processo de inserir informações, reinicie o processo.\n{E}')
+    try:
+        autenticar(site_rodar)
+        lista_clientes = abrir_arquivo('cnpjs.txt')
+        entrar_na_tela_cond(site_rodar, lista_clientes)
+
+        # inserir_infos(site)
+    except Exception as E:
+        print(f'Deu problema no processo de inserir informações, reinicie o processo.\n{E}')
 
 
 with sync_playwright() as p:
+    processar = False
     while True:
-        try:
-            navegador = p.firefox.launch(headless=False)
-            site = navegador.new_page()
-            rodar(site)
-            site.close()
-        except Exception as E:
-            site.close()
-            navegador.close()
-            print('Deu um problema, refazendo o processo: ', E)
-            navegador = p.firefox.launch(headless=False)
-            site = navegador.new_page()
-            rodar(site)
+        val = abrir_arquivo('cnpjs.txt')  # main file
+        for i in val:
+            validacao = validacao_processou = verificar_se_ja_processou(i)
+            if not validacao:
+                processar = True
+        if processar:
+            try:
+                navegador = p.firefox.launch(headless=False)
+                site = navegador.new_page()
+                rodar(site)
+                site.close()
+            except Exception as E:
+                site.close()
+                navegador.close()
+                print('Deu um problema, refazendo o processo: ', E)
+                navegador = p.firefox.launch(headless=False)
+                site = navegador.new_page()
+                rodar(site)
+        else:
+            break

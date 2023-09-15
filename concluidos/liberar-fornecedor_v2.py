@@ -79,10 +79,10 @@ def validar_listas(cliente, liberar=False):
     matriz = cliente in lista_matrizes
     filial = cliente in lista_filiais
     nao_cliente = cliente in lista_nao_clientes
-    condicao = str(cliente) in abrir_arquivo('cnpjs_filial.txt')
-    condicao2 = str(cliente) in abrir_arquivo('cnpjs_nao_cliente.txt')
-    condicao3 = str(cliente) in abrir_arquivo('cnpjs_com_distribuidor_cadastrado.txt')
-    condicao4 = str(cliente) in abrir_arquivo('cnpjs_matrizes.txt')
+    condicao = str(cliente) in abrir_arquivo('../arquivos_saida_liberar_fornecedor/cnpjs_filial.txt')
+    condicao2 = str(cliente) in abrir_arquivo('../arquivos_saida_liberar_fornecedor/cnpjs_nao_cliente.txt')
+    condicao3 = str(cliente) in abrir_arquivo('../arquivos_saida_liberar_fornecedor/cnpjs_com_distribuidor_cadastrado.txt')
+    condicao4 = str(cliente) in abrir_arquivo('../arquivos_saida_liberar_fornecedor/cnpjs_matrizes.txt')
     if any([condicao3, matriz, filial, nao_cliente]):
         return True
     if liberar:
@@ -126,7 +126,7 @@ def get_filiais():
                     int(filial))  # validar se a filial ja esta na lista das filiais
                 if not validacao_filial:
                     if not validar_listas(int(filial)):
-                        with io.open('cnpjs_filial.txt',
+                        with io.open('../arquivos_saida_liberar_fornecedor/cnpjs_filial.txt',
                                      'a', encoding='utf-8') as file:
                             file.write(f'{int(filial)}\n')
                     lista_filiais.append(int(filial))
@@ -453,7 +453,7 @@ def organizar_listas():
                                 if not input_matriz:
                                     validacao_matriz_1 = validar_listas(int(cliente))
                                     if not validacao_matriz_1:
-                                        with io.open('cnpjs_matrizes.txt',
+                                        with io.open('../arquivos_saida_liberar_fornecedor/cnpjs_matrizes.txt',
                                                      'a', encoding='utf-8') as file:
                                             file.write(f'{int(cliente)}\n')
                                         lista_matrizes.append(
@@ -465,14 +465,14 @@ def organizar_listas():
                                     print("É matriz, ver se tem filiais...")
 
                                     if not validar_listas(int(cliente)):
-                                        with io.open('cnpjs_filial.txt',
+                                        with io.open('../arquivos_saida_liberar_fornecedor/cnpjs_filial.txt',
                                                      'a', encoding='utf-8') as file:
                                             file.write(f'{int(cliente)}\n')
 
                                     lista_filiais.append(int(cliente))  # colocando a filial na lista filiais
 
                                     if not validar_listas(int(input_matriz)):
-                                        with io.open('cnpjs_matrizes.txt',
+                                        with io.open('../arquivos_saida_liberar_fornecedor/cnpjs_matrizes.txt',
                                                      'a', encoding='utf-8') as file:
                                             file.write(f'{input_matriz}\n')
 
@@ -490,7 +490,7 @@ def organizar_listas():
                         if not validacao_cliente_cotefacil:
 
                             if not validar_listas(int(cliente)):
-                                with io.open('cnpjs_nao_cliente.txt',
+                                with io.open('../arquivos_saida_liberar_fornecedor/cnpjs_nao_cliente.txt',
                                              'a', encoding='utf-8') as file:
                                     file.write(f'{int(cliente)}\n')
 
@@ -503,7 +503,7 @@ def organizar_listas():
                     print('Cliente não considerado por ter menos de 10 caracteres')
                     lista_nao_clientes.append(cliente)
 
-                    with io.open('cnpjs_nao_cliente.txt',
+                    with io.open('../arquivos_saida_liberar_fornecedor/cnpjs_nao_cliente.txt',
                                  'a', encoding='utf-8') as file:
                         file.write(f'{int(cliente)}\n')
 
@@ -568,25 +568,35 @@ def liberar_fornecedor(lista_matriz):
                     '/tr[1]/td/form/table/tbody/tr[2]/td/div/div/table/tbody/tr[2]/td/table/tbody'
                     '/tr/td/div[2]/div[2]/span[1]/select')
                 select_handle = select_element.element_handle()
-                opcao_desejada = select_handle.query_selector('option[value="7983"]')
+                opcao_desejada = select_handle.query_selector('option[value="4370"]')
 
-                if not opcao_desejada:
-                    fornecedor = '20069042000196 - JMF - SP'
-                    representante = '122360 - On-line - no-reply@cotefacil.com'
+                if opcao_desejada:
+                    select_handle.select_option(value='4370')
+                    time.sleep(1)
+                    select_element = site.locator(
+                        '#administrarCliente\:representanteCodigoCliente > select:nth-child(2)')
+                    select_handle = select_element.element_handle()
+                    id_fornecedor_opcao = '78637'  # ALTERAR AQUI
+                    opcao_desejada_2 = select_handle.query_selector(f'option[value="{id_fornecedor_opcao}"]')
+                    if opcao_desejada_2:
+                        if not validar_listas(int(cliente)):
+                            with io.open('../arquivos_saida_liberar_fornecedor/cnpjs_com_distribuidor_cadastrado.txt',
+                                         'a', encoding='utf-8') as file:
+                                file.write(f'{cliente}\n')
+
+                if not opcao_desejada or not opcao_desejada_2:
+                    fornecedor = '08196295000125 - GRANSMED - SP'
+                    representante = '78637 - On-line - no-reply@cotefacil.com'
                     site.fill('xpath=//*[@id="administrarCliente:fornecedor"]', fornecedor)
                     site.fill('xpath=//*[@id="administrarCliente:sggRepresentante"]', representante)
                     element = site.query_selector('input[type="button"][value="Adicionar"]')
                     element.click()
                     time.sleep(1)
                     print(f'cliente: {cliente} - OK')
-                    with io.open('cnpjs_com_distribuidor_cadastrado.txt',
+                    with io.open('../arquivos_saida_liberar_fornecedor/cnpjs_com_distribuidor_cadastrado.txt',
                                  'a', encoding='utf-8') as file:
                         file.write(f'{cliente}\n')
-                if opcao_desejada:
-                    if not validar_listas(int(cliente)):
-                        with io.open('cnpjs_com_distribuidor_cadastrado.txt',
-                                     'a', encoding='utf-8') as file:
-                            file.write(f'{cliente}\n')
+
     print("final do processo")
 
 
@@ -601,7 +611,7 @@ with sync_playwright() as p:
     print('Inicio do processo: ', inicio)
     try:
         autenticar()
-        lista = abrir_arquivo("teste_excluir.txt")
+        lista = abrir_arquivo("../arquivos_saida_liberar_fornecedor/cnpj_matriz.txt")
         liberar_fornecedor(lista)
     except Exception as Error:
         site.close()
