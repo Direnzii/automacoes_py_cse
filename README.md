@@ -1,6 +1,4 @@
-![Cotefacil](img/logo_cote.png)
-
-# Automações - Cotefácil !
+# Automações - CSE !
 
 Aqui estão meus projetos de automação, pensados e desenvolvidos para facilitar os testes, processos e trabalho no geral dos times.
 
@@ -9,7 +7,7 @@ Aqui estão meus projetos de automação, pensados e desenvolvidos para facilita
 Apenas clone o repo e instale as dependências.
 
 ```bash
-git clone https://github.com/Direnzii/automacoes_py_cotefacil.git
+git clone https://github.com/Direnzii/automacoes_py_cse.git
 ```
 
 ## Uso
@@ -30,6 +28,6 @@ Da utilidade das automações, estão entre elas...
 ```
 
 Tela principal de uma das ferramentas !
-![Ferramenta do suporte](img/tela_principal_ferramenta_suporte.png)
+## IMAGEM RETIRADA
 Exemplo de dados utilizados nas automações, Graylog
-![Demonstração de uma das fontes de dados, Graylog](img/demo_tela_graylog.png)
+## IMAGEM RETIRADA
